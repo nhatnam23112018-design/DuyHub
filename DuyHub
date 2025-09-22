@@ -660,154 +660,7 @@ makeDraggable(mainFrame)
    end,
 })
 
-local Tab = Window:NewTab("99Night")
-
-local Section = Tab:CreateSection("99NightByMe")
-
-local Button = Tab:CreateButton({
-   Name = "espNPC",
-   Callback = function()
-   -- GUI ESP All + Children
--- LocalScript
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local camera = workspace.CurrentCamera
-local localPlayer = Players.LocalPlayer
-
--- Tạo GUI chính
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
-screenGui.Name = "ESP_GUI"
-
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 220, 0, 120)
-frame.Position = UDim2.new(0.05, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 128, 255) -- Ocean
-frame.BorderSizePixel = 3
-frame.AnchorPoint = Vector2.new(0, 0)
-frame.Active = true
-frame.Draggable = true
-
--- Viền đổi màu
-task.spawn(function()
-    while task.wait() do
-        frame.BorderColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-    end
-end)
-
--- Nút bật ESP All
-local btnAll = Instance.new("TextButton", frame)
-btnAll.Size = UDim2.new(0, 200, 0, 40)
-btnAll.Position = UDim2.new(0, 10, 0, 10)
-btnAll.Text = "ESP All: OFF"
-btnAll.TextColor3 = Color3.new(1, 1, 1)
-btnAll.BackgroundColor3 = Color3.fromRGB(30, 144, 255)
-
--- Nút bật ESP Children
-local btnChildren = Instance.new("TextButton", frame)
-btnChildren.Size = UDim2.new(0, 200, 0, 40)
-btnChildren.Position = UDim2.new(0, 10, 0, 60)
-btnChildren.Text = "ESP Children: OFF"
-btnChildren.TextColor3 = Color3.new(1, 1, 1)
-btnChildren.BackgroundColor3 = Color3.fromRGB(30, 144, 255)
-
--- ESP GUI lưu box + tracer
-local espGui = Instance.new("ScreenGui", game.CoreGui)
-espGui.Name = "ESP_Draw"
-
-local espAllEnabled = false
-local espChildrenEnabled = false
-
--- Hàm tạo ESP
-local function createESP(npc, mode)
-    local tagName = npc.Name .. "_" .. mode
-    if espGui:FindFirstChild(tagName) then return end
-
-    local box = Instance.new("Frame", espGui)
-    box.Name = tagName
-    box.Size = UDim2.new(0, 100, 0, 150)
-    box.AnchorPoint = Vector2.new(0.5, 0.5)
-    box.BorderSizePixel = 2
-    box.BorderColor3 = Color3.fromRGB(0, 255, 0)
-    box.BackgroundTransparency = 1
-
-    local tracer = Instance.new("Frame", box)
-    tracer.Name = "Tracer"
-    tracer.Size = UDim2.new(0, 2, 0, 2)
-    tracer.BorderSizePixel = 0
-    tracer.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-
-    RunService.RenderStepped:Connect(function()
-        if (mode == "All" and espAllEnabled) or (mode == "Children" and espChildrenEnabled) then
-            if npc and npc:FindFirstChild("HumanoidRootPart") and npc:FindFirstChildOfClass("Humanoid").Health > 0 then
-                local rootPos, onScreen = camera:WorldToViewportPoint(npc.HumanoidRootPart.Position)
-                if onScreen then
-                    box.Position = UDim2.new(0, rootPos.X, 0, rootPos.Y)
-                    box.Visible = true
-                    tracer.Size = UDim2.new(0, 2, 0, (camera.ViewportSize.Y - rootPos.Y))
-                    tracer.Position = UDim2.new(0, 0, 0, 0)
-                    tracer.AnchorPoint = Vector2.new(0.5, 0)
-                else
-                    box.Visible = false
-                end
-            else
-                box.Visible = false
-            end
-        else
-            box.Visible = false
-        end
-    end)
-end
-
--- Hàm kiểm tra NPC Children
-local function isChildrenNPC(obj)
-    return obj.Name:find("Children") ~= nil and obj:FindFirstChildOfClass("Humanoid")
-end
-
--- Nút ESP All toggle
-btnAll.MouseButton1Click:Connect(function()
-    espAllEnabled = not espAllEnabled
-    btnAll.Text = "ESP All: " .. (espAllEnabled and "ON" or "OFF")
-    if espAllEnabled then
-        for _, npc in ipairs(workspace:GetChildren()) do
-            if npc:FindFirstChildOfClass("Humanoid") and npc ~= localPlayer.Character then
-                createESP(npc, "All")
-            end
-        end
-    end
-end)
-
--- Nút ESP Children toggle
-btnChildren.MouseButton1Click:Connect(function()
-    espChildrenEnabled = not espChildrenEnabled
-    btnChildren.Text = "ESP Children: " .. (espChildrenEnabled and "ON" or "OFF")
-    if espChildrenEnabled then
-        for _, npc in ipairs(workspace:GetChildren()) do
-            if isChildrenNPC(npc) and npc ~= localPlayer.Character then
-                createESP(npc, "Children")
-            end
-        end
-    end
-end)
-
--- Theo dõi NPC mới
-workspace.ChildAdded:Connect(function(child)
-    if child:FindFirstChildOfClass("Humanoid") and child ~= localPlayer.Character then
-        if espAllEnabled then
-            createESP(child, "All")
-        end
-        if espChildrenEnabled and isChildrenNPC(child) then
-            createESP(child, "Children")
-        end
-    end
-end)
-   -- The function that takes place when the button is pressed
-   end,
-})
-
-local Tab = Window:CreateTab("Gui", 4483362458) -- Title, Image
-
-local Section = Tab:CreateSection("gui")
+local Section = Tab:CreateSection("Gui")
 
 local Button = Tab:CreateButton({
    Name = "VoidWare",
@@ -818,7 +671,7 @@ local Button = Tab:CreateButton({
 })
 
 local Button = Tab:CreateButton({
-   Name = "Infinite Yield",
+   Name = "Infinite yeild",
    Callback = function()
    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
    -- The function that takes place when the button is pressed
@@ -826,9 +679,92 @@ local Button = Tab:CreateButton({
 })
 
 local Button = Tab:CreateButton({
-   Name = "Blue X Hub-Blox fruits",
+   Name = " Do you want to speedrun? Try it now",
    Callback = function()
-   loadstring(game:HttpGet("https://raw.githubusercontent.com/Dev-BlueX/BlueX-Hub/refs/heads/main/Main.lua"))()
+   -- LocalScript: Speedrun Timer
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
+
+-- GUI chính
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+ScreenGui.Name = "SpeedrunTimerGui"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 85, 170) -- ocean
+Frame.BorderSizePixel = 2
+Frame.Active = true
+Frame.Draggable = true
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0.4, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Speedrun Timer"
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local StartButton = Instance.new("TextButton", Frame)
+StartButton.Size = UDim2.new(0.8, 0, 0.4, 0)
+StartButton.Position = UDim2.new(0.1, 0, 0.5, 0)
+StartButton.Text = "Bắt đầu"
+StartButton.Font = Enum.Font.SourceSansBold
+StartButton.TextSize = 18
+StartButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+
+-- Đồng hồ góc màn hình
+local TimerLabel = Instance.new("TextLabel", ScreenGui)
+TimerLabel.Size = UDim2.new(0, 150, 0, 40)
+TimerLabel.Position = UDim2.new(1, -160, 0, 20) -- góc trên phải
+TimerLabel.BackgroundTransparency = 0.3
+TimerLabel.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
+TimerLabel.Text = "Thời gian: 05:00"
+TimerLabel.Font = Enum.Font.SourceSansBold
+TimerLabel.TextSize = 20
+TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TimerLabel.Visible = false
+
+-- Hàm thông báo
+local function sendNotification(title, text, duration)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = duration or 3
+    })
+end
+
+-- Khi bấm bắt đầu
+StartButton.MouseButton1Click:Connect(function()
+    Frame.Visible = false -- ẩn menu
+    TimerLabel.Visible = true
+
+    local totalTime = 300 -- 5 phút = 300 giây
+
+    for t = totalTime, 1, -1 do
+        task.wait(1)
+
+        -- Update đồng hồ
+        local minutes = math.floor(t / 60)
+        local seconds = t % 60
+        TimerLabel.Text = string.format("Thời gian: %02d:%02d", minutes, seconds)
+
+        -- Mỗi 30 giây thông báo
+        if t % 30 == 0 and t ~= totalTime then
+            sendNotification("Thông báo", "30s đã hết / 30 seconds passed", 3)
+        end
+
+        -- Khi hết giờ
+        if t == 1 then
+            sendNotification("RESET", "5 phút đã hết! Reset nhân vật...", 5)
+            task.wait(1)
+            player:LoadCharacter()
+            TimerLabel.Visible = false
+        end
+    end
+end)
    -- The function that takes place when the button is pressed
    end,
 })
