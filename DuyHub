@@ -1,0 +1,834 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "DuyHub",
+   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "Rayfield Interface Suite",
+   LoadingSubtitle = "by DuyXD",
+   ShowText = "DuyHub", -- for mobile users to unhide rayfield, change if you'd like
+   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+
+   ToggleUIKeybind = "K", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
+
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Hub"
+   },
+
+   Discord = {
+      Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+   },
+
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "Untitled",
+      Subtitle = "Key System",
+      Note = "No method of obtaining the key is provided", -- Use this to tell the user how to get a key
+      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
+})
+
+local Tab = Window:CreateTab("Player", 4483362458) -- Title, Image
+
+local Section = Tab:CreateSection("Player")
+
+local Button = Tab:CreateButton({
+   Name = "Walkspeed",
+   Callback = function()
+   -- Script tăng tốc độ chạy
+-- Đặt vào StarterPlayer > StarterPlayerScripts
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- chỉnh tốc độ theo ý
+humanoid.WalkSpeed = 100 -- mặc định là 16
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Hight Jump",
+   Callback = function()
+   -- Script đổi độ cao nhảy trong Roblox
+-- Đặt LocalScript này vào StarterPlayer > StarterPlayerScripts
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Chỉnh độ cao nhảy ở đây
+humanoid.UseJumpPower = true -- đảm bảo bật JumpPower
+humanoid.JumpPower = 200 -- mặc định Roblox là 50, tăng số lên để nhảy cao hơn
+
+print("JumpPower đã đổi thành: "..humanoid.JumpPower)
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "FlyGui",
+   Callback = function()
+   -- LocalScript cho Fly + Mobile Mini-Menu + Tắt khi chết
+local player = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local flying = false
+local flySpeed = 50
+local bodyVelocity
+
+-- GUI chính
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Name = "FlyGUI"
+
+-- Nút Fly
+local flyButton = Instance.new("TextButton")
+flyButton.Size = UDim2.new(0, 80, 0, 40)
+flyButton.Position = UDim2.new(0, 50, 0, 50)
+flyButton.Text = "Fly"
+flyButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+flyButton.TextColor3 = Color3.fromRGB(0,0,0)
+flyButton.Parent = screenGui
+
+-- Function kéo thả GUI
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	flyButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+		startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+flyButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = flyButton.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+flyButton.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+uis.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+-- Mini-menu điều khiển bay cho mobile
+local mobileMenu = Instance.new("Frame")
+mobileMenu.Size = UDim2.new(0,150,0,150)
+mobileMenu.Position = UDim2.new(0, 150, 0, 50)
+mobileMenu.BackgroundColor3 = Color3.fromRGB(170, 255, 195) -- Bạc hà
+mobileMenu.Visible = false
+mobileMenu.Parent = screenGui
+
+local function createArrowButton(symbol, pos, parent)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0,40,0,40)
+	btn.Position = pos
+	btn.Text = symbol
+	btn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	btn.TextColor3 = Color3.fromRGB(0,0,0)
+	btn.Parent = parent
+	return btn
+end
+
+local upBtn = createArrowButton("⬆️", UDim2.new(0.5, -20, 0, 0), mobileMenu)
+local downBtn = createArrowButton("⬇️", UDim2.new(0.5, -20, 1, -40), mobileMenu)
+local leftBtn = createArrowButton("⬅️", UDim2.new(0,0,0.5,-20), mobileMenu)
+local rightBtn = createArrowButton("➡️", UDim2.new(1,-40,0.5,-20), mobileMenu)
+local spaceBtn = createArrowButton("⬜", UDim2.new(0.5,-20,0.5,-20), mobileMenu)
+
+-- Hàm bật/tắt bay
+local function toggleFly()
+	if not flying then
+		flying = true
+		flyButton.BackgroundColor3 = Color3.fromRGB(100,255,100)
+		mobileMenu.Visible = uis.TouchEnabled
+		local character = player.Character
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			local root = character.HumanoidRootPart
+			bodyVelocity = Instance.new("BodyVelocity")
+			bodyVelocity.MaxForce = Vector3.new(1e5,1e5,1e5)
+			bodyVelocity.Velocity = Vector3.new(0,0,0)
+			bodyVelocity.Parent = root
+		end
+	else
+		flying = false
+		flyButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+		mobileMenu.Visible = false
+		if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
+	end
+end
+
+flyButton.MouseButton1Click:Connect(toggleFly)
+
+-- Kiểm tra input để bay
+local moveDirection = Vector3.new(0,0,0)
+local moveButtons = {
+	[upBtn] = Vector3.new(0,0,-1),
+	[downBtn] = Vector3.new(0,0,1),
+	[leftBtn] = Vector3.new(-1,0,0),
+	[rightBtn] = Vector3.new(1,0,0),
+	[spaceBtn] = Vector3.new(0,1,0)
+}
+
+for btn, dir in pairs(moveButtons) do
+	btn.MouseButton1Down:Connect(function()
+		moveDirection = moveDirection + dir
+	end)
+	btn.MouseButton1Up:Connect(function()
+		moveDirection = moveDirection - dir
+	end)
+end
+
+-- Update BodyVelocity mỗi frame
+runService.RenderStepped:Connect(function()
+	if flying and bodyVelocity then
+		local cam = workspace.CurrentCamera
+		local direction = (cam.CFrame:VectorToWorldSpace(Vector3.new(moveDirection.X, moveDirection.Y, moveDirection.Z)))
+		if direction.Magnitude > 0 then
+			direction = direction.Unit
+		else
+			direction = Vector3.new(0,0,0)
+		end
+		bodyVelocity.Velocity = direction * flySpeed
+	end
+end)
+
+-- Giám sát khi nhân vật chết
+local function onCharacterAdded(char)
+	local humanoid = char:WaitForChild("Humanoid")
+	humanoid.Died:Connect(function()
+		flying = false
+		mobileMenu.Visible = false
+		flyButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+		if bodyVelocity then
+			bodyVelocity:Destroy()
+			bodyVelocity = nil
+		end
+	end)
+end
+
+-- Kết nối nhân vật hiện tại và nhân vật mới nếu respawn
+if player.Character then
+	onCharacterAdded(player.Character)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Infinite jump Gui",
+   Callback = function()
+   -- LocalScript: Infinite Jump Menu
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local guiService = game:GetService("CoreGui")
+
+-- Biến trạng thái
+local infiniteJumpEnabled = false
+
+-- Hàm bật/tắt Infinite Jump
+local function toggleInfiniteJump()
+	infiniteJumpEnabled = not infiniteJumpEnabled
+end
+
+-- Xây dựng GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "InfiniteJumpMenu"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 180, 0, 70)
+mainFrame.Position = UDim2.new(0.5, -90, 0.5, -35)
+mainFrame.BackgroundColor3 = Color3.fromRGB(28, 170, 255) -- ocean
+mainFrame.BorderSizePixel = 3
+mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+mainFrame.Parent = screenGui
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundTransparency = 1
+title.Text = "Infinite Jump"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = mainFrame
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(1, -20, 0, 30)
+toggleButton.Position = UDim2.new(0, 10, 0, 35)
+toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Text = "OFF"
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 16
+toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+toggleButton.Parent = mainFrame
+
+toggleButton.MouseButton1Click:Connect(function()
+	toggleInfiniteJump()
+end)
+
+-- Chức năng Infinite Jump
+local function onJumpRequest()
+	if infiniteJumpEnabled then
+		local char = player.Character
+		if char and char:FindFirstChild("Humanoid") then
+			char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end
+end
+
+uis.JumpRequest:Connect(onJumpRequest)
+
+-- Hiệu ứng màu nút và viền
+rs.RenderStepped:Connect(function(delta)
+	if infiniteJumpEnabled then
+		local t = tick() * 2
+		toggleButton.BackgroundColor3 = Color3.fromHSV(t % 1, 0.8, 1)
+	else
+		toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	end
+	mainFrame.BorderColor3 = Color3.fromHSV(tick() % 1, 1, 1)
+end)
+
+-- Tắt menu khi chết
+local function onCharacterAdded(char)
+	infiniteJumpEnabled = false
+	if screenGui then
+		screenGui.Enabled = true
+	end
+
+	local humanoid = char:WaitForChild("Humanoid")
+	humanoid.Died:Connect(function()
+		if screenGui then
+			screenGui.Enabled = false
+		end
+		infiniteJumpEnabled = false
+	end)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then
+	onCharacterAdded(player.Character)
+end
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "NoclipGui",
+   Callback = function()
+   -- LocalScript: Đặt trong StarterPlayerScripts
+
+local player = game.Players.LocalPlayer
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NoclipGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Frame chính
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 150, 0, 60)
+frame.Position = UDim2.new(0.5, -75, 0.8, 0)
+frame.BackgroundColor3 = Color3.fromRGB(0, 128, 255) -- Ocean
+frame.BorderSizePixel = 3
+frame.Parent = screenGui
+
+-- UICorner cho frame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+-- Tạo button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(1, -10, 1, -10)
+button.Position = UDim2.new(0, 5, 0, 5)
+button.Text = "OFF"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
+button.BorderSizePixel = 0
+button.Parent = frame
+
+-- Noclip biến
+local noclipEnabled = false
+
+-- Các màu 7 sắc
+local colors = {
+    Color3.fromRGB(255,0,0),
+    Color3.fromRGB(255,127,0),
+    Color3.fromRGB(255,255,0),
+    Color3.fromRGB(0,255,0),
+    Color3.fromRGB(0,0,255),
+    Color3.fromRGB(75,0,130),
+    Color3.fromRGB(148,0,211)
+}
+
+-- Noclip logic
+local function noclipLoop()
+    local character = player.Character
+    if not character then return end
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not noclipEnabled
+        end
+    end
+end
+
+-- Khi chết, reset
+local function onDeath()
+    noclipEnabled = false
+    button.Text = "OFF"
+    button.BackgroundColor3 = Color3.fromRGB(0,128,255)
+end
+
+-- Kết nối button
+button.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    if noclipEnabled then
+        button.Text = "ON"
+    else
+        button.Text = "OFF"
+        button.BackgroundColor3 = Color3.fromRGB(0,128,255)
+    end
+end)
+
+-- Chuyển màu liên tục cho button khi ON
+spawn(function()
+    local index = 1
+    while true do
+        if noclipEnabled then
+            button.BackgroundColor3 = colors[index]
+            index = index + 1
+            if index > #colors then index = 1 end
+        end
+        wait(0.2)
+    end
+end)
+
+-- Chuyển màu viền Frame liên tục
+spawn(function()
+    local index = 1
+    while true do
+        frame.BorderColor3 = colors[index]
+        index = index + 1
+        if index > #colors then index = 1 end
+        wait(0.2)
+    end
+end)
+
+-- Noclip thực sự
+runService.Stepped:Connect(function()
+    if noclipEnabled and player.Character then
+        for _, part in pairs(player.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- Reset khi chết
+player.CharacterAdded:Connect(function(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    humanoid.Died:Connect(onDeath)
+end)
+
+-- ==========================
+-- Kéo thả mượt cho GUI
+-- ==========================
+local function makeDraggable(frame)
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    local function update(input)
+        local delta = input.Position - mousePos
+        frame.Position = UDim2.new(
+            framePos.X.Scale,
+            framePos.X.Offset + delta.X,
+            framePos.Y.Scale,
+            framePos.Y.Offset + delta.Y
+        )
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            mousePos = input.Position
+            framePos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    uis.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- Áp dụng kéo thả cho frame Noclip
+makeDraggable(frame)
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "TeleportGui",
+   Callback = function()
+   -- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- Variables
+local tpPosition = nil
+
+-- GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TeleportMenu"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 120)
+mainFrame.Position = UDim2.new(0.5, -100, 0.5, -60)
+mainFrame.BackgroundColor3 = Color3.fromRGB(28, 107, 160) -- màu ocean
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- UICorner
+local borderFrame = Instance.new("UICorner")
+borderFrame.CornerRadius = UDim.new(0, 10)
+borderFrame.Parent = mainFrame
+
+-- Frame viền
+local border = Instance.new("Frame")
+border.Size = UDim2.new(1, 4, 1, 4)
+border.Position = UDim2.new(0, -2, 0, -2)
+border.BorderSizePixel = 0
+border.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+border.Parent = mainFrame
+
+-- Màu rainbow
+local rainbowColors = {
+	Color3.fromRGB(255,0,0),
+	Color3.fromRGB(255,127,0),
+	Color3.fromRGB(255,255,0),
+	Color3.fromRGB(0,255,0),
+	Color3.fromRGB(0,0,255),
+	Color3.fromRGB(75,0,130),
+	Color3.fromRGB(148,0,211)
+}
+
+-- Chậm tốc độ đổi màu viền (0.5s)
+local colorIndex = 1
+spawn(function()
+	while true do
+		border.BackgroundColor3 = rainbowColors[colorIndex]
+		colorIndex = colorIndex + 1
+		if colorIndex > #rainbowColors then colorIndex = 1 end
+		wait(0.5)
+	end
+end)
+
+-- Tạo nút
+local function createButton(name, position, parent)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 180, 0, 40)
+	btn.Position = position
+	btn.BackgroundColor3 = Color3.fromRGB(50, 150, 200)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 20
+	btn.Text = name
+	btn.Parent = parent
+	return btn
+end
+
+local setButton = createButton("Set", UDim2.new(0,10,0,10), mainFrame)
+local tpButton = createButton("Teleport", UDim2.new(0,10,0,70), mainFrame)
+
+-- Nút chức năng
+setButton.MouseButton1Click:Connect(function()
+	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		tpPosition = player.Character.HumanoidRootPart.Position
+		print("Vị trí teleport đã được đặt!")
+	end
+end)
+
+tpButton.MouseButton1Click:Connect(function()
+	if tpPosition and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		player.Character.HumanoidRootPart.CFrame = CFrame.new(tpPosition)
+		print("Đã teleport!")
+	else
+		print("Chưa đặt vị trí teleport!")
+	end
+end)
+
+-- ==========================
+-- Kéo thả mượt
+-- ==========================
+local UserInputService = game:GetService("UserInputService")
+
+local function makeDraggable(frame)
+	local dragging = false
+	local dragInput, mousePos, framePos
+
+	local function update(input)
+		local delta = input.Position - mousePos
+		frame.Position = UDim2.new(
+			framePos.X.Scale,
+			framePos.X.Offset + delta.X,
+			framePos.Y.Scale,
+			framePos.Y.Offset + delta.Y
+		)
+	end
+
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			mousePos = input.Position
+			framePos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+-- Áp dụng kéo thả cho Teleport frame
+makeDraggable(mainFrame)
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Tab = Window:NewTab("99Night")
+
+local Section = Tab:CreateSection("99NightByMe")
+
+local Button = Tab:CreateButton({
+   Name = "espNPC",
+   Callback = function()
+   -- GUI ESP All + Children
+-- LocalScript
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+local localPlayer = Players.LocalPlayer
+
+-- Tạo GUI chính
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.Name = "ESP_GUI"
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 220, 0, 120)
+frame.Position = UDim2.new(0.05, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(0, 128, 255) -- Ocean
+frame.BorderSizePixel = 3
+frame.AnchorPoint = Vector2.new(0, 0)
+frame.Active = true
+frame.Draggable = true
+
+-- Viền đổi màu
+task.spawn(function()
+    while task.wait() do
+        frame.BorderColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+    end
+end)
+
+-- Nút bật ESP All
+local btnAll = Instance.new("TextButton", frame)
+btnAll.Size = UDim2.new(0, 200, 0, 40)
+btnAll.Position = UDim2.new(0, 10, 0, 10)
+btnAll.Text = "ESP All: OFF"
+btnAll.TextColor3 = Color3.new(1, 1, 1)
+btnAll.BackgroundColor3 = Color3.fromRGB(30, 144, 255)
+
+-- Nút bật ESP Children
+local btnChildren = Instance.new("TextButton", frame)
+btnChildren.Size = UDim2.new(0, 200, 0, 40)
+btnChildren.Position = UDim2.new(0, 10, 0, 60)
+btnChildren.Text = "ESP Children: OFF"
+btnChildren.TextColor3 = Color3.new(1, 1, 1)
+btnChildren.BackgroundColor3 = Color3.fromRGB(30, 144, 255)
+
+-- ESP GUI lưu box + tracer
+local espGui = Instance.new("ScreenGui", game.CoreGui)
+espGui.Name = "ESP_Draw"
+
+local espAllEnabled = false
+local espChildrenEnabled = false
+
+-- Hàm tạo ESP
+local function createESP(npc, mode)
+    local tagName = npc.Name .. "_" .. mode
+    if espGui:FindFirstChild(tagName) then return end
+
+    local box = Instance.new("Frame", espGui)
+    box.Name = tagName
+    box.Size = UDim2.new(0, 100, 0, 150)
+    box.AnchorPoint = Vector2.new(0.5, 0.5)
+    box.BorderSizePixel = 2
+    box.BorderColor3 = Color3.fromRGB(0, 255, 0)
+    box.BackgroundTransparency = 1
+
+    local tracer = Instance.new("Frame", box)
+    tracer.Name = "Tracer"
+    tracer.Size = UDim2.new(0, 2, 0, 2)
+    tracer.BorderSizePixel = 0
+    tracer.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+
+    RunService.RenderStepped:Connect(function()
+        if (mode == "All" and espAllEnabled) or (mode == "Children" and espChildrenEnabled) then
+            if npc and npc:FindFirstChild("HumanoidRootPart") and npc:FindFirstChildOfClass("Humanoid").Health > 0 then
+                local rootPos, onScreen = camera:WorldToViewportPoint(npc.HumanoidRootPart.Position)
+                if onScreen then
+                    box.Position = UDim2.new(0, rootPos.X, 0, rootPos.Y)
+                    box.Visible = true
+                    tracer.Size = UDim2.new(0, 2, 0, (camera.ViewportSize.Y - rootPos.Y))
+                    tracer.Position = UDim2.new(0, 0, 0, 0)
+                    tracer.AnchorPoint = Vector2.new(0.5, 0)
+                else
+                    box.Visible = false
+                end
+            else
+                box.Visible = false
+            end
+        else
+            box.Visible = false
+        end
+    end)
+end
+
+-- Hàm kiểm tra NPC Children
+local function isChildrenNPC(obj)
+    return obj.Name:find("Children") ~= nil and obj:FindFirstChildOfClass("Humanoid")
+end
+
+-- Nút ESP All toggle
+btnAll.MouseButton1Click:Connect(function()
+    espAllEnabled = not espAllEnabled
+    btnAll.Text = "ESP All: " .. (espAllEnabled and "ON" or "OFF")
+    if espAllEnabled then
+        for _, npc in ipairs(workspace:GetChildren()) do
+            if npc:FindFirstChildOfClass("Humanoid") and npc ~= localPlayer.Character then
+                createESP(npc, "All")
+            end
+        end
+    end
+end)
+
+-- Nút ESP Children toggle
+btnChildren.MouseButton1Click:Connect(function()
+    espChildrenEnabled = not espChildrenEnabled
+    btnChildren.Text = "ESP Children: " .. (espChildrenEnabled and "ON" or "OFF")
+    if espChildrenEnabled then
+        for _, npc in ipairs(workspace:GetChildren()) do
+            if isChildrenNPC(npc) and npc ~= localPlayer.Character then
+                createESP(npc, "Children")
+            end
+        end
+    end
+end)
+
+-- Theo dõi NPC mới
+workspace.ChildAdded:Connect(function(child)
+    if child:FindFirstChildOfClass("Humanoid") and child ~= localPlayer.Character then
+        if espAllEnabled then
+            createESP(child, "All")
+        end
+        if espChildrenEnabled and isChildrenNPC(child) then
+            createESP(child, "Children")
+        end
+    end
+end)
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Tab = Window:CreateTab("Gui", 4483362458) -- Title, Image
+
+local Section = Tab:CreateSection("gui")
+
+local Button = Tab:CreateButton({
+   Name = "VoidWare",
+   Callback = function()
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/nightsintheforest.lua", true))()
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Infinite Yield",
+   Callback = function()
+   loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+   -- The function that takes place when the button is pressed
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Blue X Hub-Blox fruits",
+   Callback = function()
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/Dev-BlueX/BlueX-Hub/refs/heads/main/Main.lua"))()
+   -- The function that takes place when the button is pressed
+   end,
+})
