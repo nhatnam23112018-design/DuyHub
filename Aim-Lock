@@ -1,0 +1,116 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+-- Xóa gui cũ nếu có
+pcall(function()
+    player.PlayerGui:FindFirstChild("aim-lock gui"):Destroy()
+end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "aim-lock gui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame
+local Frame = Instance.new("Frame", gui)
+Frame.Size = UDim2.new(0, 260, 0, 140)
+Frame.Position = UDim2.new(0.7,0,0.25,0)
+Frame.BackgroundColor3 = Color3.fromRGB(170,170,170)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+
+local UIcorner = Instance.new("UICorner", Frame)
+UIcorner.CornerRadius = UDim.new(0,8)
+
+-- Header
+local Header = Instance.new("Frame", Frame)
+Header.Size = UDim2.new(1,0,0,32)
+Header.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Header.BorderSizePixel = 0
+local UIC2 = Instance.new("UICorner", Header)
+UIC2.CornerRadius = UDim.new(0,8)
+
+local Title = Instance.new("TextLabel", Header)
+Title.Size = UDim2.new(1,0,1,0)
+Title.BackgroundTransparency = 1
+Title.Text = "aim-lock gui"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+
+-- Toggle Button
+local Toggle = Instance.new("TextButton", Frame)
+Toggle.Size = UDim2.new(1,-20,0,45)
+Toggle.Position = UDim2.new(0,10,0,50)
+Toggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
+Toggle.Text = "Aim-Lock: OFF"
+Toggle.TextColor3 = Color3.fromRGB(255,255,255)
+Toggle.Font = Enum.Font.Gotham
+Toggle.TextScaled = true
+Instance.new("UICorner", Toggle)
+
+-- Drag System (Mobile + PC)
+do
+    local dragging, dragInput, dragStart, startPos
+    Frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = Frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    Frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Aim Lock Logic
+local lock = false
+local function getNearest()
+    local myChar = player.Character
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+    local root = myChar.HumanoidRootPart
+    local nearest, dist = nil, math.huge
+
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local d = (root.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+            if d < dist and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
+                dist = d
+                nearest = plr.Character
+            end
+        end
+    end
+    return nearest
+end
+
+Toggle.MouseButton1Click:Connect(function()
+    lock = not lock
+    Toggle.Text = "Aim-Lock: "..(lock and "ON" or "OFF")
+    Toggle.BackgroundColor3 = lock and Color3.fromRGB(0,170,0) or Color3.fromRGB(60,60,60)
+end)
+
+RunService.RenderStepped:Connect(function()
+    if lock then
+        local myChar = player.Character
+        local target = getNearest()
+        if myChar and target and myChar:FindFirstChild("HumanoidRootPart") and target:FindFirstChild("HumanoidRootPart") then
+            local root = myChar.HumanoidRootPart
+            root.CFrame = CFrame.new(root.Position, Vector3.new(target.HumanoidRootPart.Position.X, root.Position.Y, target.HumanoidRootPart.Position.Z))
+        end
+    end
+end)
